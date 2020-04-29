@@ -1,0 +1,92 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Transform": "AWS::Serverless-2016-10-31",
+
+  "Parameters": {
+    "ScheduleExpression": {
+      "Type": "String",
+      "Default": "cron(0 19 1/1 * ? *)"
+    }
+  },
+
+  "Resources": {
+    "IamRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        ],
+        "Policies": [
+          {
+            "PolicyName": "EC2AllowDescribeInstances",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "ec2:DescribeInstances",
+                  "Resource": "*"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "EC2AllowStopInstances",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "ec2:StopInstances",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+
+    "Function": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "CodeUri": "./index.js",
+        "Runtime": "nodejs12.x",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 30,
+        "Events": {
+          "Trigger": {
+            "Type": "Schedule",
+            "Properties": {
+              "Schedule": {
+                "Ref": "ScheduleExpression"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

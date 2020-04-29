@@ -15,7 +15,7 @@ The instance will not be stopped by the Lambda.
 
 **If an instance does not have the ```RunMode``` tag nor it has an unrecognized value, the Lambda assumes the ```OnDemand``` value.**
 
-## IAM Role
+### IAM Role
 
 This Lambda requires an execution role to work properly.  
 The IAM role must have the following policies:
@@ -24,7 +24,7 @@ The IAM role must have the following policies:
     * ```ec2:DescribeInstances```
     * ```ec2:StopInstances```
 
-## Return values
+### Return values
 
 This Lambda returns to different values:
 
@@ -32,3 +32,17 @@ This Lambda returns to different values:
 - If one or many instances have been shutted down, the Lambda returns the list of the stopped instance's IDs.
 
 These values are logged to CloudWatch by using the ```console.log``` function.
+
+## CloudFormation
+
+A CloudFormation template is provided to quickly deploy all the needed resources.  
+As a prerequisite, you need to create a bucket which will contain the Lambda source code.
+
+1. Once you bucket is created, package the application:
+```
+$ aws cloudformation package --template-file .\cloudformation.json --s3-bucket <bucket name> --output-template-file packaged.json
+```
+2. Then, deploy the CloudFormation stack:
+```
+$ aws cloudformation deploy --template-file .\packaged.json --stack-name ec2-autostop --capabilities CAPABILITY_IAM
+```
